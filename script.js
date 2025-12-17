@@ -1,6 +1,6 @@
 // --- SUPABASE KONFİGÜRASYONU ---
 const SUPABASE_URL = "https://hrpltsogjmbdbbpljbqw.supabase.co";
-const SUPABASE_KEY = "sb_publishable_Jy-Fxmq7gsTJ-XHZSOO5lw_JDuNx0xg=="; // Key sonuna == gerekebilir, tam kopyala.
+const SUPABASE_KEY = "sb_publishable_Jy-Fxmq7gsTJ-XHZSOO5lw_JDuNx0xg"; // Key sonuna == gerekebilir, tam kopyala.
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentUser = JSON.parse(sessionStorage.getItem('currentUser')) || null;
@@ -174,4 +174,5 @@ function toggleModal(id) {
 
 function setupMobileMenu() {
     document.getElementById('menuToggle').onclick = () => document.getElementById('sidebar').classList.toggle('active');
+
 }
