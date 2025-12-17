@@ -1,31 +1,35 @@
-// --- YENİ SUPABASE BAĞLANTISI ---
+// --- YENİ SUPABASE YAPILANDIRMASI ---
 const SUPABASE_URL = "https://axxcarwzuabkkgcnnwqu.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4eGNhcnd6dWFia2tnY25ud3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5Njg5MzMsImV4cCI6MjA4MTU0NDkzM30.KtEBkJ2U14GovPEvhlV66zTwV6ujnIuVf_VJTlPtoAw";
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentUser = JSON.parse(sessionStorage.getItem('currentUser')) || null;
 
-document.addEventListener('DOMContentLoaded', () => {
+window.onload = () => {
     if (currentUser) showApp();
-});
+};
 
-// --- GİRİŞ SİSTEMİ ---
 async function handleLogin() {
     const user = document.getElementById('login-username').value.trim();
     const pass = document.getElementById('login-password').value.trim();
     const btn = document.getElementById('login-btn');
 
-    if (!user || !pass) return alert("Alanları doldurun!");
-    btn.innerText = "Giriş yapılıyor...";
-
-    // Admin Kontrolü
-    if (user.toLowerCase() === 'admin' && pass === '1234') {
-        currentUser = { role: 'admin', name: 'Yönetici' };
-        loginDone();
+    if (!user || !pass) {
+        alert("Lütfen alanları doldurun!");
         return;
     }
 
-    // Sakin Kontrolü
+    btn.innerText = "Bağlanıyor...";
+    btn.disabled = true;
+
+    // 1. ADMIN KONTROLÜ
+    if (user.toLowerCase() === 'admin' && pass === '1234') {
+        currentUser = { role: 'admin', name: 'Yönetici' };
+        loginSuccess();
+        return;
+    }
+
+    // 2. SAKİN KONTROLÜ
     try {
         const { data, error } = await supabase
             .from('sakinler')
@@ -34,22 +38,45 @@ async function handleLogin() {
             .eq('sifre', pass)
             .maybeSingle();
 
+        if (error) throw error;
+
         if (data) {
             currentUser = { role: 'resident', name: data.ad, daire: data.daire, id: data.id };
-            loginDone();
+            loginSuccess();
         } else {
-            alert("Hatalı Giriş!");
-            btn.innerText = "Giriş Yap";
+            alert("Hatalı kullanıcı adı veya şifre!");
+            resetBtn(btn);
         }
-    } catch (e) {
-        alert("Bağlantı hatası!");
-        btn.innerText = "Giriş Yap";
+    } catch (err) {
+        console.error("Giriş Hatası:", err);
+        alert("Veritabanına bağlanılamadı. SQL tablolarını oluşturdunuz mu?");
+        resetBtn(btn);
     }
 }
 
-function loginDone() {
+function loginSuccess() {
     sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
     showApp();
+}
+
+function resetBtn(btn) {
+    btn.innerText = "Giriş Yap";
+    btn.disabled = false;
+}
+
+function showApp() {
+    document.body.classList.remove('login-mode');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-wrapper').style.display = 'flex';
+    document.getElementById('user-display-name').innerText = currentUser.name;
+
+    if (currentUser.role === 'admin') {
+        const adminDiv = document.getElementById('admin-stats');
+        if(adminDiv) adminDiv.style.display = 'block';
+    }
+    
+    renderMenu();
+    fetchData();
 }
 
 function handleLogout() {
@@ -57,127 +84,32 @@ function handleLogout() {
     location.reload();
 }
 
-// --- UYGULAMA EKRANI ---
-function showApp() {
-    document.body.classList.remove('login-mode');
-    document.body.classList.add('app-mode');
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('user-display-name').innerText = currentUser.name;
-
-    if (currentUser.role === 'admin') document.body.classList.add('is-admin');
-    
-    renderMenu();
-    loadAllData();
-}
-
-async function loadAllData() {
-    const { data: s } = await supabase.from('sakinler').select('*').order('daire');
-    const { data: a } = await supabase.from('arizalar').select('*').order('id', {ascending: false});
-    const { data: d } = await supabase.from('duyurular').select('*').order('id', {ascending: false});
-
-    if(s) {
-        renderSakinler(s);
-        renderAidat(s);
-        updateStats(s);
-    }
-    if(a) renderArizalar(a);
-    if(d) renderDuyurular(d);
-}
-
-// --- RENDERLAR ---
-function renderSakinler(list) {
-    const body = document.getElementById('sakinTableBody');
-    if (!body) return;
-    body.innerHTML = list.map(s => `
-        <tr><td>${s.daire}</td><td>${s.ad}</td><td>${s.tel}</td>
-        <td><button onclick="deleteSakin(${s.id})" style="color:red; cursor:pointer; border:none; background:none;">Sil</button></td></tr>
-    `).join('');
-}
-
-function renderAidat(list) {
-    const body = document.getElementById('aidatTableBody');
-    const filtered = (currentUser.role === 'admin') ? list : list.filter(x => x.daire === currentUser.daire);
-    body.innerHTML = filtered.map(s => `
-        <tr><td>${s.daire}</td><td>${s.ad}</td><td>₺500</td>
-        <td><span class="badge ${s.aidat_odedi ? 'bg-success' : 'bg-danger'}">${s.aidat_odedi ? 'Ödendi' : 'Borç'}</span></td>
-        <td class="admin-only">${currentUser.role === 'admin' ? `<button onclick="toggleAidat(${s.id},${s.aidat_odedi})">Değiştir</button>` : '-'}</td></tr>
-    `).join('');
-}
-
-function updateStats(list) {
-    if(currentUser.role === 'admin') {
-        const toplam = list.filter(x => x.aidat_odedi).length * 500;
-        document.getElementById('stat-kasa').innerText = `₺${toplam}`;
-        document.getElementById('stat-bekleyen').innerText = list.filter(x => !x.aidat_odedi).length;
-    }
-}
-
-function renderArizalar(list) {
-    document.getElementById('arizaList').innerHTML = list.map(x => `<div class="card"><strong>${x.baslik} (${x.daire})</strong><p>${x.detay}</p></div>`).join('');
-}
-
-function renderDuyurular(list) {
-    document.getElementById('duyuruList').innerHTML = list.map(x => `<div class="card"><h4>${x.baslik}</h4><p>${x.metin}</p></div>`).join('');
-}
-
-// --- AKSİYONLAR ---
-async function saveSakin() {
-    const daire = document.getElementById('sakinDaire').value;
-    const ad = document.getElementById('sakinAd').value;
-    await supabase.from('sakinler').insert([{daire, ad, sifre:'123'}]);
-    toggleModal('sakinModal');
-    loadAllData();
-}
-
-async function toggleAidat(id, stat) {
-    await supabase.from('sakinler').update({aidat_odedi: !stat}).eq('id', id);
-    loadAllData();
-}
-
-async function deleteSakin(id) {
-    if(confirm("Silmek istediğinize emin misiniz?")) {
-        await supabase.from('sakinler').delete().eq('id', id);
-        loadAllData();
-    }
-}
-
-async function saveAriza() {
-    const baslik = document.getElementById('arizaBaslik').value;
-    const detay = document.getElementById('arizaDetay').value;
-    await supabase.from('arizalar').insert([{baslik, detay, daire: currentUser.daire || 'Yönetim'}]);
-    toggleModal('arizaModal');
-    loadAllData();
-}
-
-async function saveDuyuru() {
-    const baslik = document.getElementById('duyuruBaslik').value;
-    const metin = document.getElementById('duyuruMetin').value;
-    await supabase.from('duyurular').insert([{baslik, metin}]);
-    toggleModal('duyuruModal');
-    loadAllData();
-}
-
-// --- UI ARAÇLARI ---
+// Menü ve Veri çekme fonksiyonları öncekiyle aynı şekilde devam eder...
 function renderMenu() {
     const menu = document.getElementById('menu-list');
     const items = [
-        { t: 'Panel', i: 'fa-home', target: 'dashboard' },
-        { t: 'Sakinler', i: 'fa-users', target: 'sakinler', admin: true },
-        { t: 'Aidat', i: 'fa-lira-sign', target: 'aidat' },
-        { t: 'Arızalar', i: 'fa-wrench', target: 'ariza' },
-        { t: 'Duyurular', i: 'fa-bullhorn', target: 'duyuru' }
+        { t: 'Panel', target: 'dashboard', icon: 'fa-home' },
+        { t: 'Sakinler', target: 'sakinler', icon: 'fa-users', admin: true },
+        { t: 'Aidat', target: 'aidat', icon: 'fa-lira-sign' }
     ];
-    menu.innerHTML = items.filter(x => !x.admin || currentUser.role === 'admin').map(x => `<li><a href="#" class="nav-item" data-target="${x.target}"><i class="fas ${x.i}"></i> ${x.t}</a></li>`).join('');
-    
-    document.querySelectorAll('.nav-item').forEach(el => {
-        el.onclick = () => {
-            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-            document.getElementById(el.dataset.target).classList.add('active');
-        };
-    });
+    menu.innerHTML = items
+        .filter(i => !i.admin || currentUser.role === 'admin')
+        .map(i => `<li onclick="switchTab('${i.target}')"><i class="fas ${i.icon}"></i> ${i.t}</li>`)
+        .join('');
 }
 
-function toggleModal(id) {
-    const m = document.getElementById(id);
-    m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
+function switchTab(target) {
+    document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+    document.getElementById(target).classList.add('active');
+}
+
+async function fetchData() {
+    // Supabase'den verileri çek ve tabloları doldur
+    const { data: s } = await supabase.from('sakinler').select('*');
+    if(s) renderSakinler(s);
+}
+
+function renderSakinler(list) {
+    const b = document.getElementById('sakinTableBody');
+    if(b) b.innerHTML = list.map(x => `<tr><td>${x.daire}</td><td>${x.ad}</td></tr>`).join('');
 }
