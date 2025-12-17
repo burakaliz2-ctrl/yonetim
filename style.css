@@ -1,38 +1,141 @@
-:root { --primary: #2563eb; --bg: #f8fafc; }
-body { font-family: sans-serif; margin: 0; background: var(--bg); }
+:root { 
+    --primary: #2563eb; 
+    --primary-dark: #1e40af;
+    --sidebar: #1e293b; 
+    --bg: #f1f5f9; 
+    --card-bg: #ffffff;
+    --text-main: #334155;
+    --border: #e2e8f0;
+}
 
-/* YETKİ KONTROLÜ - KRİTİK KISIM */
+body { 
+    font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+    margin: 0; 
+    background: var(--bg); 
+    color: var(--text-main);
+}
+
+/* --- YETKİ KONTROLÜ --- */
 .admin-only, .resident-only { display: none !important; }
 body.is-admin .admin-only { display: block !important; }
 body.is-admin td.admin-only, body.is-admin th.admin-only { display: table-cell !important; }
+body.is-admin div.admin-only { display: grid !important; }
 body.is-resident .resident-only { display: block !important; }
 
-/* LAYOUT */
-#app-wrapper { display: flex; height: 100vh; }
-.sidebar { width: 240px; background: #1e293b; color: white; padding: 20px; }
-.nav-links { list-style: none; padding: 0; }
-.nav-links li { padding: 12px; cursor: pointer; border-radius: 8px; }
-.nav-links li:hover { background: rgba(255,255,255,0.1); }
-.main-content { flex: 1; padding: 20px; overflow-y: auto; }
-.content-section { display: none; }
-.content-section.active { display: block; }
+/* --- LAYOUT & SIDEBAR --- */
+#app-wrapper { display: flex; height: 100vh; overflow: hidden; }
 
-/* CARD & TABLE */
-.dashboard-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-table { width: 100%; border-collapse: collapse; background: white; margin-top: 20px; }
-th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
-.badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
-.bg-success { background: #dcfce7; color: #166534; }
-.bg-danger { background: #fee2e2; color: #991b1b; }
+.sidebar { 
+    width: 260px; 
+    background: var(--sidebar); 
+    color: white; 
+    padding: 25px 15px; 
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+}
 
-/* MODAL & LOGIN */
-.login-overlay { height: 100vh; display: flex; align-items: center; justify-content: center; background: #ddd; }
-.login-card { background: white; padding: 30px; border-radius: 10px; width: 300px; text-align: center; }
-.login-card input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-.btn-login { width: 100%; background: var(--primary); color: white; border: none; padding: 10px; cursor: pointer; border-radius: 5px; margin-top: 10px; }
-.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; }
-.modal-content { background: white; padding: 25px; border-radius: 10px; width: 350px; }
-.modal-content input, .modal-content textarea { width: 100%; margin-bottom: 10px; padding: 10px; box-sizing: border-box; }
-.btn-primary { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
-.btn-secondary { background: #eee; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+.sidebar-header h3 { 
+    font-size: 1.5rem; 
+    margin-bottom: 30px; 
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+.sidebar-header span { color: var(--primary); }
+
+.nav-links { list-style: none; padding: 0; margin: 0; }
+
+.nav-links li { 
+    padding: 12px 20px; 
+    cursor: pointer; 
+    border-radius: 10px; 
+    margin-bottom: 8px; 
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 500;
+}
+
+.nav-links li:hover { background: rgba(255,255,255,0.1); transform: translateX(5px); }
+.nav-links li i { width: 20px; font-size: 1.1rem; color: #94a3b8; }
+
+/* --- ANA İÇERİK ALANI --- */
+.main-content { flex: 1; padding: 30px; overflow-y: auto; }
+
+header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border);
+}
+
+.user-info { display: flex; align-items: center; gap: 15px; }
+#user-display-name { font-weight: 600; color: var(--sidebar); }
+
+.btn-logout { 
+    background: #fee2e2; 
+    color: #ef4444; 
+    border: none; 
+    padding: 8px 12px; 
+    border-radius: 8px; 
+    cursor: pointer; 
+}
+
+/* --- DASHBOARD KARTLARI --- */
+.dashboard-cards { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+    gap: 25px; 
+    margin-top: 20px;
+}
+
+.card { 
+    background: var(--card-bg); 
+    padding: 25px; 
+    border-radius: 16px; 
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); 
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid var(--border);
+}
+
+.card h3 { font-size: 1.8rem; margin: 0; color: var(--sidebar); }
+.card p { margin: 5px 0 0; color: #64748b; font-weight: 500; }
+
+.card-blue { border-left: 5px solid var(--primary); }
+.card-red { border-left: 5px solid #ef4444; }
+
+/* --- TABLOLAR --- */
+.table-container { 
+    background: white; 
+    border-radius: 16px; 
+    padding: 10px; 
+    margin-top: 20px; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+}
+
+table { width: 100%; border-collapse: collapse; }
+th { background: #f8fafc; padding: 15px; text-align: left; font-weight: 600; color: #64748b; border-bottom: 2px solid var(--border); }
+td { padding: 15px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tr:hover { background: #f8fafc; }
+
+/* --- BADGES --- */
+.badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.bg-success { background: #dcfce7; color: #15803d; }
+.bg-danger { background: #fee2e2; color: #b91c1c; }
+
+/* --- GİRİŞ EKRANI (MODERN) --- */
+.login-overlay { height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e293b 0%, #334155 100%); }
+.login-card { background: white; padding: 40px; border-radius: 24px; width: 380px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+.login-header h2 { margin-bottom: 25px; font-size: 1.8rem; }
+.login-body input { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid var(--border); border-radius: 12px; font-size: 1rem; }
+.btn-login { width: 100%; background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 1rem; margin-top: 15px; }
+
+/* --- MODAL --- */
+.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.75); display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+.modal-content { background: white; padding: 35px; border-radius: 20px; width: 450px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
