@@ -13,17 +13,13 @@ async function handleLogin() {
     const pass = document.getElementById('login-password').value.trim();
     const errMsg = document.getElementById('login-error-msg');
     
-    errMsg.style.display = 'none';
-
-    // 1. Admin Kontrolü (Hızlı ve Kesin)
     if(user.toLowerCase() === 'admin' && pass === '1234') {
         currentUser = { role: 'admin', name: 'Yönetici' };
         return loginProcess();
     }
 
-    // 2. Sakin Kontrolü (Supabase Sorgusu)
     try {
-        const { data, error } = await _supabase.from('sakinler').select('*').eq('daire', user).eq('sifre', pass).maybeSingle();
+        const { data } = await _supabase.from('sakinler').select('*').eq('daire', user).eq('sifre', pass).maybeSingle();
         if(data) {
             currentUser = { role: 'resident', name: data.ad, daire: data.daire, id: data.id };
             loginProcess();
@@ -31,7 +27,6 @@ async function handleLogin() {
             errMsg.style.display = 'block';
         }
     } catch (e) {
-        console.error(e);
         alert("Bağlantı hatası!");
     }
 }
@@ -46,14 +41,13 @@ function handleLogout() {
     location.reload();
 }
 
-// --- PANEL YÖNETİMİ ---
+// --- PANEL VE SAYFA YÖNETİMİ (KRİTİK KISIM) ---
 function showApp() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app-wrapper').style.display = 'flex';
     document.getElementById('user-display-name').innerText = currentUser.name;
     document.body.classList.remove('login-mode');
 
-    // Yetki Sınıflandırması
     document.body.classList.remove('is-admin', 'is-resident');
     document.body.classList.add(currentUser.role === 'admin' ? 'is-admin' : 'is-resident');
 
@@ -70,13 +64,37 @@ function renderMenu() {
         { t: 'Duyurular', target: 'duyurular', icon: 'fa-bullhorn' },
         { t: 'Arızalar', target: 'ariza', icon: 'fa-wrench' }
     ];
-    list.innerHTML = items.map(i => `<li onclick="switchTab('${i.target}', '${i.t}')"><i class="fas ${i.icon}"></i> ${i.t}</li>`).join('');
+    
+    // innerHTML ile menü basılırken onclick olaylarının doğru bağlandığından emin oluyoruz
+    list.innerHTML = items.map(i => `
+        <li onclick="switchTab('${i.target}', '${i.t}')">
+            <i class="fas ${i.icon}"></i> <span>${i.t}</span>
+        </li>
+    `).join('');
 }
 
-function switchTab(target, title) {
-    document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-    document.getElementById(target).classList.add('active');
+function switchTab(targetId, title) {
+    // 1. Tüm seksiyonları gizle
+    const sections = document.querySelectorAll('.content-section');
+    sections.forEach(s => {
+        s.classList.remove('active');
+        s.style.display = 'none'; // CSS'deki display:none'ı garantiye alıyoruz
+    });
+
+    // 2. Hedef seksiyonu göster
+    const targetSection = document.getElementById(targetId);
+    if (targetSection) {
+        targetSection.classList.add('active');
+        targetSection.style.display = 'block';
+    }
+
+    // 3. Başlığı güncelle
     document.getElementById('current-page-title').innerText = title;
+
+    // 4. Menüdeki aktiflik görselini güncelle (opsiyonel)
+    const menuItems = document.querySelectorAll('.nav-links li');
+    menuItems.forEach(li => li.classList.remove('active-link'));
+    event.currentTarget.classList.add('active-link');
 }
 
 // --- VERİ İŞLEMLERİ ---
@@ -88,16 +106,15 @@ async function fetchData() {
     if(sak) {
         const viewList = (currentUser.role === 'admin') ? sak : sak.filter(x => x.daire === currentUser.daire);
         
-        // Tabloları doldur
         document.getElementById('sakinTableBody').innerHTML = viewList.map(x => `
             <tr><td>${x.daire}</td><td>${x.ad}</td><td>${x.tel}</td>
-            <td class="admin-only"><button onclick="deleteSakin(${x.id})">Sil</button></td></tr>
+            <td class="admin-only"><button class="btn-secondary" onclick="deleteSakin(${x.id})">Sil</button></td></tr>
         `).join('');
 
         document.getElementById('aidatTableBody').innerHTML = viewList.map(x => `
             <tr><td>${x.daire}</td><td>Aralık 2025</td><td>₺1.250</td>
             <td><span class="badge ${x.aidat_odedi ? 'bg-success' : 'bg-danger'}">${x.aidat_odedi ? 'Ödendi' : 'Borç'}</span></td>
-            <td class="admin-only"><button onclick="toggleAidat(${x.id}, ${x.aidat_odedi})">Güncelle</button></td></tr>
+            <td class="admin-only"><button class="btn-primary" onclick="toggleAidat(${x.id}, ${x.aidat_odedi})">Güncelle</button></td></tr>
         `).join('');
 
         if(currentUser.role === 'admin') {
@@ -105,43 +122,59 @@ async function fetchData() {
             document.getElementById('stat-bekleyen').innerText = sak.filter(x => !x.aidat_odedi).length;
         } else {
             const me = sak.find(x => x.daire === currentUser.daire);
-            document.getElementById('res-name').innerText = me.ad;
-            document.getElementById('my-status-card').innerHTML = me.aidat_odedi ? 
-                '<span style="color:green">Borcunuz yoktur.</span>' : '<span style="color:red">₺1.250 Borcunuz Var!</span>';
+            if(me) {
+                document.getElementById('res-name').innerText = me.ad;
+                document.getElementById('my-status-card').innerHTML = me.aidat_odedi ? 
+                    '<span style="color:#15803d">Ödenmemiş borcunuz bulunmamaktadır.</span>' : 
+                    '<span style="color:#b91c1c">₺1.250 Aidat Borcunuz Mevcuttur!</span>';
+            }
         }
     }
 
-    if(duy) document.getElementById('duyuruList').innerHTML = duy.map(x => `<div class="card"><h4>${x.baslik}</h4><p>${x.metin}</p></div>`).join('');
+    if(duy) {
+        document.getElementById('duyuruList').innerHTML = duy.map(x => `
+            <div class="card" style="flex-direction:column; align-items:flex-start;">
+                <h4 style="color:var(--primary); margin-bottom:10px;">${x.baslik}</h4>
+                <p>${x.metin}</p>
+                <small style="margin-top:10px; color:#94a3b8;">${new Date(x.tarih).toLocaleDateString('tr-TR')}</small>
+            </div>
+        `).join('');
+    }
     
     if(arz && currentUser.role === 'admin') {
-        document.getElementById('arizaTableBody').innerHTML = arz.map(x => `<tr><td>${x.daire}</td><td>${x.baslik}</td><td>${x.detay}</td><td>${new Date(x.tarih).toLocaleDateString()}</td></tr>`).join('');
+        document.getElementById('arizaTableBody').innerHTML = arz.map(x => `
+            <tr><td><b>${x.daire}</b></td><td>${x.baslik}</td><td>${x.detay}</td><td>${new Date(x.tarih).toLocaleDateString('tr-TR')}</td></tr>
+        `).join('');
     }
 }
 
-// --- KAYIT FONKSİYONLARI ---
+// --- DİĞER FONKSİYONLAR (KAYIT, MODAL VS.) ---
 async function saveAriza() {
     const b = document.getElementById('ariza-baslik').value;
     const d = document.getElementById('ariza-detay').value;
+    if(!b || !d) return alert("Lütfen tüm alanları doldurun.");
     await _supabase.from('arizalar').insert([{ daire: currentUser.daire, baslik: b, detay: d }]);
-    alert("Yönetime iletildi."); fetchData();
+    alert("Arıza bildirimi yönetime iletildi.");
+    document.getElementById('ariza-baslik').value = "";
+    document.getElementById('ariza-detay').value = "";
+    fetchData();
 }
 
 async function saveSakin() {
-    await _supabase.from('sakinler').insert([{ 
-        daire: document.getElementById('sakinDaire').value, 
-        ad: document.getElementById('sakinAd').value, 
-        tel: document.getElementById('sakinTel').value, 
-        sifre: '123' 
-    }]);
-    toggleModal('sakinModal'); fetchData();
+    const daire = document.getElementById('sakinDaire').value;
+    const ad = document.getElementById('sakinAd').value;
+    const tel = document.getElementById('sakinTel').value;
+    await _supabase.from('sakinler').insert([{ daire, ad, tel, sifre: '123' }]);
+    toggleModal('sakinModal');
+    fetchData();
 }
 
 async function saveDuyuru() {
-    await _supabase.from('duyurular').insert([{ 
-        baslik: document.getElementById('duyuruBaslik').value, 
-        metin: document.getElementById('duyuruMetin').value 
-    }]);
-    toggleModal('duyuruModal'); fetchData();
+    const b = document.getElementById('duyuruBaslik').value;
+    const m = document.getElementById('duyuruMetin').value;
+    await _supabase.from('duyurular').insert([{ baslik: b, metin: m }]);
+    toggleModal('duyuruModal');
+    fetchData();
 }
 
 async function toggleAidat(id, stat) {
@@ -150,7 +183,13 @@ async function toggleAidat(id, stat) {
 }
 
 async function deleteSakin(id) {
-    if(confirm("Emin misiniz?")) { await _supabase.from('sakinler').delete().eq('id', id); fetchData(); }
+    if(confirm("Bu sakini silmek istediğinize emin misiniz?")) {
+        await _supabase.from('sakinler').delete().eq('id', id);
+        fetchData();
+    }
 }
 
-function toggleModal(id) { const m = document.getElementById(id); m.style.display = m.style.display === 'flex' ? 'none' : 'flex'; }
+function toggleModal(id) {
+    const m = document.getElementById(id);
+    m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
+}
