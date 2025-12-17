@@ -1,33 +1,41 @@
-/* --- YETKİ KONTROLÜ --- */
+:root { --primary: #2563eb; --sidebar: #1e293b; --bg: #f8fafc; --border: #e2e8f0; }
+body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); overflow: hidden; }
+
+/* Yetki Gizleme */
 .admin-only, .resident-only { display: none !important; }
-
 body.is-admin .admin-only { display: block !important; }
-body.is-admin table .admin-only, body.is-admin tr .admin-only, body.is-admin td .admin-only { display: table-cell !important; }
+body.is-admin td.admin-only, body.is-admin th.admin-only { display: table-cell !important; }
 body.is-admin div.admin-only { display: grid !important; }
-
 body.is-resident .resident-only { display: block !important; }
 
-/* --- DİĞER STİLLER (Öncekiyle uyumlu) --- */
-:root { --primary: #2563eb; --bg: #f8fafc; --border: #e2e8f0; }
-body { font-family: 'Inter', sans-serif; margin:0; background: var(--bg); }
+/* Giriş */
 .login-overlay { height: 100vh; display: flex; align-items: center; justify-content: center; background: #cbd5e1; }
-.login-card { background: white; padding: 40px; border-radius: 16px; width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+.login-card { background: white; padding: 40px; border-radius: 16px; width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
 .login-card input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; }
-#app-wrapper { display: flex; min-height: 100vh; }
-.sidebar { width: 250px; background: #1e293b; color: white; padding: 20px; }
+.btn-login { width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+/* Layout */
+#app-wrapper { display: flex; height: 100vh; }
+.sidebar { width: 250px; background: var(--sidebar); color: white; padding: 20px; flex-shrink: 0; }
 .nav-links { list-style: none; padding: 0; }
-.nav-links li { padding: 12px; cursor: pointer; border-radius: 8px; transition: 0.2s; }
+.nav-links li { padding: 12px; cursor: pointer; border-radius: 8px; margin-bottom: 5px; transition: 0.3s; display: flex; align-items: center; gap: 10px; }
 .nav-links li:hover { background: rgba(255,255,255,0.1); }
-.main-content { flex: 1; padding: 30px; }
-.content-section { display: none; }
+.main-content { flex: 1; padding: 30px; overflow-y: auto; }
+
+/* Sekmeler */
+.content-section { display: none; animation: fadeIn 0.3s; }
 .content-section.active { display: block; }
-.dashboard-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px; }
-.card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
-.badge { padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+@keyframes fadeIn { from { opacity:0; transform: translateY(5px); } to { opacity:1; transform: translateY(0); } }
+
+/* Kartlar ve Tablolar */
+.dashboard-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+.card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
+th, td { padding: 15px; text-align: left; border-bottom: 1px solid #f1f5f9; }
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; }
 .bg-success { background: #dcfce7; color: #166534; }
 .bg-danger { background: #fee2e2; color: #991b1b; }
+
 .modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; }
 .modal-content { background:white; padding:30px; border-radius:15px; width:400px; }
-table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; margin-top: 20px; }
-th, td { padding: 15px; text-align: left; border-bottom: 1px solid #f1f5f9; }
 .btn-primary { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
