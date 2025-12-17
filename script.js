@@ -1,6 +1,6 @@
 // --- 1. SUPABASE YAPILANDIRMASI ---
 const SUPABASE_URL = "https://hrpltsogjmbdbbpljbqw.supabase.co";
-const SUPABASE_KEY = "sb_publishable_Jy-Fxmq7gsTJ-XHZSOO5lw_JDuNx0xg";
+const SUPABASE_KEY = "sb_publishable_Jy-Fxmq7gsTJ-XHZSOO5lw_JDuNx0xg==";
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentUser = JSON.parse(sessionStorage.getItem('currentUser')) || null;
@@ -301,3 +301,4 @@ function setupMobileMenu() {
         toggle.onclick = () => document.getElementById('sidebar').classList.toggle('active');
     }
 }
+
