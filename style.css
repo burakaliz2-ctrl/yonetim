@@ -1,184 +1,133 @@
 :root { 
     --primary: #2563eb; 
-    --primary-dark: #1e40af;
     --sidebar: #1e293b; 
-    --bg: #f1f5f9; 
-    --card-bg: #ffffff;
-    --text-main: #334155;
-    --border: #e2e8f0;
+    --bg: #f8fafc; 
 }
 
-body { 
-    font-family: 'Inter', system-ui, -apple-system, sans-serif; 
-    margin: 0; 
-    background: var(--bg); 
-    color: var(--text-main);
-    overflow-x: hidden; /* Yatay taşmayı engelle */
-}
+body { font-family: sans-serif; margin: 0; background: var(--bg); overflow-x: hidden; }
 
-/* --- YETKİ KONTROLÜ --- */
+/* YETKİ KONTROLÜ */
 .admin-only, .resident-only { display: none !important; }
 body.is-admin .admin-only { display: block !important; }
 body.is-admin td.admin-only, body.is-admin th.admin-only { display: table-cell !important; }
-body.is-admin div.admin-only { display: grid !important; }
 body.is-resident .resident-only { display: block !important; }
 
-/* --- LAYOUT --- */
-#app-wrapper { 
-    display: flex; 
-    height: 100vh; 
-}
+/* LAYOUT */
+#app-wrapper { display: flex; height: 100vh; }
 
-/* --- SIDEBAR (MOBİL UYUMLU) --- */
 .sidebar { 
-    width: 260px; 
+    width: 240px; 
     background: var(--sidebar); 
     color: white; 
-    padding: 25px 15px; 
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    transition: all 0.3s ease;
-    z-index: 1000;
+    padding: 20px; 
+    flex-shrink: 0; 
 }
 
-.sidebar-header h3 { 
-    font-size: 1.5rem; 
-    margin-bottom: 30px; 
-    text-align: center;
-}
-.sidebar-header span { color: var(--primary); }
-
-.nav-links { list-style: none; padding: 0; margin: 0; }
+.nav-links { list-style: none; padding: 0; }
 .nav-links li { 
-    padding: 12px 20px; 
+    padding: 12px; 
     cursor: pointer; 
-    border-radius: 10px; 
-    margin-bottom: 8px; 
+    border-radius: 8px; 
+    margin-bottom: 5px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    font-weight: 500;
+    gap: 10px;
 }
-.nav-links li:hover, .nav-links li.active-link { 
-    background: rgba(255,255,255,0.1); 
-    color: var(--primary);
-}
+.nav-links li:hover { background: rgba(255,255,255,0.1); }
 
-/* --- ANA İÇERİK --- */
-.main-content { 
-    flex: 1; 
-    padding: 30px; 
-    overflow-y: auto; 
-    width: 100%;
-}
+.main-content { flex: 1; padding: 20px; overflow-y: auto; width: 100%; }
 
-header { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    margin-bottom: 30px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid var(--border);
-}
-
-/* --- DASHBOARD KARTLARI --- */
+/* KARTLAR VE DASHBOARD */
 .dashboard-cards { 
     display: grid; 
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
     gap: 20px; 
 }
 
 .card { 
-    background: var(--card-bg); 
-    padding: 20px; 
-    border-radius: 16px; 
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); 
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border: 1px solid var(--border);
-}
-
-/* --- TABLO KONTEYNER (MOBİL İÇİN KAYDIRILABİLİR) --- */
-.table-container { 
     background: white; 
-    border-radius: 16px; 
-    margin-top: 20px; 
-    overflow-x: auto; /* Mobilde tablonun taşmasını engeller */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+    padding: 20px; 
+    border-radius: 10px; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+    border: 1px solid #eee;
 }
 
-table { 
-    width: 100%; 
-    border-collapse: collapse; 
-    min-width: 600px; /* Tablonun çok sıkışmasını engeller */
+/* TABLO MOBİL UYUMLU */
+.table-container { overflow-x: auto; background: white; border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; min-width: 500px; }
+th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
+
+/* GİRİŞ EKRANI DÜZELTME */
+.login-overlay { 
+    height: 100vh; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    background: #e2e8f0; 
 }
 
-/* --- GİRİŞ EKRANI --- */
 .login-card { 
     background: white; 
     padding: 30px; 
-    border-radius: 24px; 
-    width: 90%; /* Mobilde ekrana sığması için */
-    max-width: 380px; 
+    border-radius: 15px; 
+    width: 320px; 
+    text-align: center; 
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
 }
 
-/* =============================================
-   MOBİL MEDIA QUERIES (RESPONSIVE AYARLAR)
-   ============================================= */
+.login-card input { 
+    width: 100%; 
+    padding: 12px; 
+    margin: 8px 0; 
+    border: 1px solid #cbd5e1; 
+    border-radius: 8px; 
+    box-sizing: border-box; 
+}
 
+.btn-login, .btn-primary { 
+    background: var(--primary); 
+    color: white; 
+    border: none; 
+    padding: 12px 20px; 
+    cursor: pointer; 
+    border-radius: 8px; 
+    font-weight: bold;
+}
+
+/* MODAL DÜZELTME */
+.modal { 
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.5); 
+    display: none; 
+    align-items: center; 
+    justify-content: center; 
+    z-index: 2000;
+}
+
+.modal-content { 
+    background: white; 
+    padding: 25px; 
+    border-radius: 12px; 
+    width: 90%; 
+    max-width: 400px; 
+}
+
+.modal-content input, .modal-content textarea {
+    width: 100%;
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
+/* MOBİL AYARLAR */
 @media (max-width: 768px) {
-    #app-wrapper {
-        flex-direction: column; /* Menü ve içeriği alt alta getir */
-    }
-
-    .sidebar {
-        width: 100%;
-        height: auto;
-        padding: 10px;
-        order: 2; /* Menüyü alta al (veya istersen üstte tut) */
-    }
-
-    .sidebar-header { display: none; } /* Mobilde logoyu gizle yer kaplamasın */
-
-    .nav-links {
-        display: flex;
-        overflow-x: auto; /* Yatayda kaydırılabilir menü */
-        white-space: nowrap;
-        gap: 5px;
-        padding-bottom: 5px;
-    }
-
-    .nav-links li {
-        padding: 10px 15px;
-        margin-bottom: 0;
-        font-size: 14px;
-        flex-direction: column;
-        gap: 5px;
-    }
-
-    .nav-links li span {
-        font-size: 10px;
-    }
-
-    .main-content {
-        padding: 15px;
-        order: 1;
-        height: calc(100vh - 80px); /* Menüye yer bırak */
-    }
-
-    header {
-        flex-direction: row;
-        font-size: 14px;
-    }
-
-    .dashboard-cards {
-        grid-template-columns: 1fr; /* Kartlar tek sütun olsun */
-    }
-
-    .modal-content {
-        width: 95%;
-        padding: 20px;
-    }
+    #app-wrapper { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; padding: 10px; }
+    .nav-links { display: flex; overflow-x: auto; white-space: nowrap; gap: 10px; }
+    .nav-links li { padding: 8px 15px; margin-bottom: 0; }
+    .main-content { padding: 15px; }
 }
