@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YönetimPRO | Site Yönetim Sistemi</title>
-    
+    <title>YönetimPRO | Profesyonel Yönetim</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
@@ -16,90 +15,97 @@
             <div class="login-header">
                 <i class="fas fa-building-circle-check"></i>
                 <h2>Yönetim<span>PRO</span></h2>
-                <p>Güvenli Giriş Paneli</p>
             </div>
             <div class="login-body">
-                <div class="input-group">
-                    <label>Kullanıcı Adı / Daire</label>
-                    <input type="text" id="login-username" placeholder="admin veya A-1">
-                </div>
-                <div class="input-group">
-                    <label>Şifre</label>
-                    <input type="password" id="login-password" placeholder="••••">
-                </div>
-                <button type="button" onclick="handleLogin()" id="login-btn" class="btn-login">Giriş Yap</button>
-            </div>
-            <div class="login-footer">
-                <small>Admin: <strong>admin / 1234</strong></small>
+                <input type="text" id="login-username" placeholder="Daire No veya admin">
+                <input type="password" id="login-password" placeholder="Şifre">
+                <button type="button" onclick="handleLogin()" id="login-btn" class="btn-login">Sisteme Giriş</button>
             </div>
         </div>
     </div>
 
     <div id="app-wrapper" style="display:none;">
-        <nav class="sidebar" id="sidebar">
+        <nav class="sidebar">
             <div class="sidebar-header"><h3>Yönetim<span>PRO</span></h3></div>
-            <ul class="nav-links" id="menu-list">
-                </ul>
+            <ul class="nav-links" id="menu-list"></ul>
         </nav>
 
         <main class="main-content">
             <header>
-                <div class="header-left">
-                    <h2 id="current-page-title">Genel Bakış</h2>
-                </div>
+                <h2 id="current-page-title">Panel</h2>
                 <div class="user-info">
-                    <i class="fas fa-user-circle"></i>
                     <span id="user-display-name">...</span>
-                    <button onclick="handleLogout()" class="btn-logout" title="Çıkış Yap">
-                        <i class="fas fa-power-off"></i>
-                    </button>
+                    <button onclick="handleLogout()" class="btn-logout"><i class="fas fa-power-off"></i></button>
                 </div>
             </header>
 
             <section id="dashboard" class="content-section active">
-                <div id="admin-stats" class="dashboard-cards" style="display:none;">
-                    <div class="card card-blue">
-                        <h3 id="stat-kasa">₺0</h3>
-                        <p>Toplam Tahsilat</p>
-                    </div>
-                    <div class="card card-red">
-                        <h3 id="stat-bekleyen">0</h3>
-                        <p>Bekleyen Aidat</p>
-                    </div>
+                <div class="dashboard-cards admin-only">
+                    <div class="card card-blue"><h3 id="stat-kasa">₺0</h3><p>Kasa Toplamı</p></div>
+                    <div class="card card-red"><h3 id="stat-bekleyen">0</h3><p>Ödeme Bekleyenler</p></div>
                 </div>
-                <div id="resident-welcome" class="welcome-box" style="display:none;">
-                    <h2>Hoş Geldiniz, <span id="res-name"></span></h2>
-                    <div id="my-debt-status"></div>
+                <div class="resident-only welcome-box">
+                    <h2>Merhaba, <span id="res-name"></span></h2>
+                    <div id="my-status-card" class="card">Yükleniyor...</div>
                 </div>
             </section>
 
-            <section id="sakinler" class="content-section">
+            <section id="sakinler" class="content-section admin-only">
                 <div class="section-header">
-                    <h2>Sakin Listesi</h2>
-                    <button class="btn-primary" onclick="toggleModal('sakinModal')">+ Yeni Sakin</button>
+                    <h2>Sakin Yönetimi</h2>
+                    <button class="btn-primary" onclick="toggleModal('sakinModal')">+ Yeni Kayıt</button>
                 </div>
                 <table>
-                    <thead>
-                        <tr><th>Daire</th><th>Ad Soyad</th><th>İletişim</th><th>İşlem</th></tr>
-                    </thead>
+                    <thead><tr><th>Daire</th><th>Ad Soyad</th><th>Tel</th><th>İşlem</th></tr></thead>
                     <tbody id="sakinTableBody"></tbody>
                 </table>
+            </section>
+
+            <section id="odemeler" class="content-section">
+                <div class="section-header"><h2>Aidat Takibi</h2></div>
+                <div class="table-responsive">
+                    <table id="aidat-table">
+                        <thead><tr><th>Daire</th><th>Dönem</th><th>Tutar</th><th>Durum</th><th class="admin-only">Onay</th></tr></thead>
+                        <tbody id="aidatTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="duyurular" class="content-section">
+                <div class="section-header">
+                    <h2>Duyurular</h2>
+                    <button class="btn-primary admin-only" onclick="toggleModal('duyuruModal')">Duyuru Ekle</button>
+                </div>
+                <div id="duyuruList" class="dashboard-cards"></div>
+            </section>
+
+            <section id="ariza" class="content-section">
+                <div class="section-header"><h2>Arıza Bildirimi</h2></div>
+                <div class="card" style="max-width: 600px; flex-direction: column; align-items: flex-start;">
+                    <input type="text" id="ariza-baslik" placeholder="Konu (Örn: Asansör)" style="width:100%; margin-bottom:10px; padding:10px;">
+                    <textarea id="ariza-detay" placeholder="Detaylı açıklama..." style="width:100%; height:100px; padding:10px;"></textarea>
+                    <button class="btn-primary" style="margin-top:10px;" onclick="saveAriza()">Bildirimi Gönder</button>
+                </div>
             </section>
         </main>
     </div>
 
-    <div id="sakinModal" class="modal">
-        <div class="modal-content">
-            <h3>Yeni Sakin Kaydı</h3>
-            <input type="text" id="sakinDaire" placeholder="Daire (Örn: A-1)">
-            <input type="text" id="sakinAd" placeholder="Ad Soyad">
-            <input type="text" id="sakinTel" placeholder="Telefon">
-            <div class="modal-buttons">
-                <button onclick="saveSakin()" class="btn-primary">Kaydet</button>
-                <button onclick="toggleModal('sakinModal')" class="btn-secondary">İptal</button>
-            </div>
-        </div>
-    </div>
+    <div id="sakinModal" class="modal"><div class="modal-content">
+        <h3>Yeni Sakin Ekle</h3>
+        <input type="text" id="sakinDaire" placeholder="Daire No">
+        <input type="text" id="sakinAd" placeholder="Ad Soyad">
+        <input type="text" id="sakinTel" placeholder="Telefon">
+        <button onclick="saveSakin()" class="btn-primary">Kaydet</button>
+        <button onclick="toggleModal('sakinModal')" class="btn-secondary">Kapat</button>
+    </div></div>
+
+    <div id="duyuruModal" class="modal"><div class="modal-content">
+        <h3>Duyuru Yayınla</h3>
+        <input type="text" id="duyuruBaslik" placeholder="Duyuru Başlığı">
+        <textarea id="duyuruMetin" placeholder="Mesajınız..." style="width:100%; margin-bottom:10px; height:80px;"></textarea>
+        <button onclick="saveDuyuru()" class="btn-primary">Yayınla</button>
+        <button onclick="toggleModal('duyuruModal')" class="btn-secondary">Kapat</button>
+    </div></div>
 
     <script src="script.js"></script>
 </body>
