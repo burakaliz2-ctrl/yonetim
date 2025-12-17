@@ -1,8 +1,7 @@
-// --- 1. SUPABASE BAĞLANTISI ---
-const S_URL = "https://axxcarwzuabkkgcnnwqu.supabase.co".trim();
-const S_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4eGNhcnd6dWFia2tnY25ud3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5Njg5MzMsImV4cCI6MjA4MTU0NDkzM30.KtEBkJ2U14GovPEvhlV66zTwV6ujnIuVf_VJTlPtoAw".trim();
+// --- 1. SUPABASE KONFİGÜRASYONU ---
+var S_URL = "https://axxcarwzuabkkgcnnwqu.supabase.co".trim();
+var S_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4eGNhcnd6dWFia2tnY25ud3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5Njg5MzMsImV4cCI6MjA4MTU0NDkzM30.KtEBkJ2U14GovPEvhlV66zTwV6ujnIuVf_VJTlPtoAw".trim();
 
-// Global değişkenler
 var _supabase = window.supabase.createClient(S_URL, S_KEY);
 var currentUser = JSON.parse(sessionStorage.getItem('currentUser')) || null;
 
@@ -10,25 +9,25 @@ window.onload = function() {
     if (currentUser) showApp();
 };
 
-// --- 2. GİRİŞ SİSTEMİ ---
+// --- 2. GİRİŞ VE ÇIKIŞ ---
 async function handleLogin() {
     const user = document.getElementById('login-username').value.trim();
     const pass = document.getElementById('login-password').value.trim();
     const btn = document.getElementById('login-btn');
 
-    if (!user || !pass) return alert("Bilgileri girin!");
+    if (!user || !pass) { alert("Lütfen giriş bilgilerini yazın."); return; }
 
     btn.innerText = "Giriş yapılıyor...";
     btn.disabled = true;
 
-    // Admin statik kontrol
+    // A. ÖNCE ADMIN KONTROLÜ
     if (user.toLowerCase() === 'admin' && pass === '1234') {
-        currentUser = { role: 'admin', name: 'Site Yöneticisi' };
+        currentUser = { role: 'admin', name: 'Yönetici', id: 'admin-mode' };
         loginSuccess();
         return;
     }
 
-    // Sakin veritabanı kontrol
+    // B. SAKİN KONTROLÜ
     try {
         const { data, error } = await _supabase
             .from('sakinler')
@@ -38,14 +37,14 @@ async function handleLogin() {
             .maybeSingle();
 
         if (data) {
-            currentUser = { role: 'resident', name: data.ad, daire: data.daire };
+            currentUser = { role: 'resident', name: data.ad, daire: data.daire, id: data.id };
             loginSuccess();
         } else {
-            alert("Hatalı giriş!");
+            alert("Hatalı kullanıcı adı veya şifre!");
             resetBtn(btn);
         }
     } catch (e) {
-        alert("Bağlantı hatası!");
+        alert("Bağlantı hatası: " + e.message);
         resetBtn(btn);
     }
 }
@@ -60,43 +59,94 @@ function resetBtn(btn) {
     btn.disabled = false;
 }
 
-// --- 3. GÖRÜNÜM YÖNETİMİ ---
+function handleLogout() {
+    sessionStorage.clear();
+    location.reload();
+}
+
+// --- 3. UYGULAMA GÖRÜNÜMÜ ---
 function showApp() {
-    // DOM Elementlerini Güvenli Şekilde Al
     const loginScr = document.getElementById('login-screen');
     const appWrap = document.getElementById('app-wrapper');
     const nameDsp = document.getElementById('user-display-name');
     const admSts = document.getElementById('admin-stats');
+    const resWlc = document.getElementById('resident-welcome');
 
     if (loginScr) loginScr.style.display = 'none';
     if (appWrap) appWrap.style.display = 'flex';
     if (nameDsp) nameDsp.innerText = currentUser.name;
-    
     document.body.classList.remove('login-mode');
 
-    // Admin ise istatistikleri göster
-    if (currentUser.role === 'admin' && admSts) {
-        admSts.style.display = 'flex';
+    if (currentUser.role === 'admin') {
+        if (admSts) admSts.style.display = 'grid';
+        if (resWlc) resWlc.style.display = 'none';
+        document.body.classList.add('is-admin');
+    } else {
+        if (admSts) admSts.style.display = 'none';
+        if (resWlc) resWlc.style.display = 'block';
+        document.getElementById('res-name').innerText = currentUser.name;
     }
 
-    fetchSakinler();
+    renderMenu();
+    fetchData();
 }
 
-async function fetchSakinler() {
-    const { data, error } = await _supabase.from('sakinler').select('*');
-    const tbody = document.getElementById('sakinTableBody');
-    if (tbody && data) {
-        tbody.innerHTML = data.map(s => `
+function renderMenu() {
+    const list = document.getElementById('menu-list');
+    const items = [
+        { t: 'Panel', target: 'dashboard', icon: 'fa-home' },
+        { t: 'Sakinler', target: 'sakinler', icon: 'fa-users', admin: true }
+    ];
+    list.innerHTML = items
+        .filter(i => !i.admin || currentUser.role === 'admin')
+        .map(i => `<li onclick="switchTab('${i.target}')"><i class="fas ${i.icon}"></i> ${i.t}</li>`)
+        .join('');
+}
+
+function switchTab(target) {
+    document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+    document.getElementById(target).classList.add('active');
+}
+
+// --- 4. VERİ İŞLEMLERİ ---
+async function fetchData() {
+    const { data: s } = await _supabase.from('sakinler').select('*').order('daire');
+    const body = document.getElementById('sakinTableBody');
+    if (body && s) {
+        body.innerHTML = s.map(x => `
             <tr>
-                <td>${s.daire}</td>
-                <td>${s.ad}</td>
-                <td>${currentUser.role === 'admin' ? '<button>Sil</button>' : '-'}</td>
+                <td>${x.daire}</td>
+                <td>${x.ad}</td>
+                <td>${x.tel || '-'}</td>
+                <td>${currentUser.role === 'admin' ? `<button onclick="deleteSakin(${x.id})">Sil</button>` : '-'}</td>
             </tr>
         `).join('');
+
+        if (currentUser.role === 'admin') {
+            const kasa = s.filter(x => x.aidat_odedi).length * 500;
+            document.getElementById('stat-kasa').innerText = `₺${kasa}`;
+            document.getElementById('stat-bekleyen').innerText = s.filter(x => !x.aidat_odedi).length;
+        }
     }
 }
 
-function handleLogout() {
-    sessionStorage.clear();
-    location.reload();
+async function saveSakin() {
+    const daire = document.getElementById('sakinDaire').value;
+    const ad = document.getElementById('sakinAd').value;
+    const tel = document.getElementById('sakinTel').value;
+    await _supabase.from('sakinler').insert([{daire, ad, tel, sifre:'123'}]);
+    toggleModal('sakinModal');
+    fetchData();
+}
+
+async function deleteSakin(id) {
+    if(confirm("Silmek istediğinize emin misiniz?")) {
+        await _supabase.from('sakinler').delete().eq('id', id);
+        fetchData();
+    }
+}
+
+function toggleModal(id) {
+    const m = document.getElementById(id);
+    if (m) m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
 }
