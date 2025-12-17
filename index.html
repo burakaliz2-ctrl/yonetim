@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YönetimPRO | Bulut Tabanlı Site Yönetimi</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="login-mode">
+
+    <div id="login-screen" class="login-overlay">
+        <div class="login-card">
+            <div class="login-header">
+                <i class="fas fa-building"></i>
+                <h2>Yönetim<span>PRO</span></h2>
+                <p>Güvenli Veritabanı Bağlantısı</p>
+            </div>
+            <div class="login-body">
+                <input type="text" id="login-username" placeholder="Daire No (Örn: A-1) veya admin">
+                <input type="password" id="login-password" placeholder="Şifre">
+                <button onclick="handleLogin()" id="login-btn" class="btn-login">Giriş Yap</button>
+            </div>
+            <div class="login-footer">
+                <small>Yönetici: admin / 1234 | Sakin: 123</small>
+            </div>
+        </div>
+    </div>
+
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>Yönetim<span>PRO</span></h3>
+        </div>
+        <ul class="nav-links" id="menu-list"></ul>
+    </nav>
+
+    <main class="main-content" id="main-content">
+        <header>
+            <div class="header-left">
+                <div class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></div>
+                <h2 id="current-page-title">Panel</h2>
+            </div>
+            <div class="user-info">
+                <span id="user-display-name">...</span>
+                <button onclick="handleLogout()" class="btn-logout" title="Güvenli Çıkış"><i class="fas fa-power-off"></i></button>
+            </div>
+        </header>
+
+        <section id="dashboard" class="content-section active">
+            <div class="dashboard-cards admin-only" id="admin-stats">
+                <div class="card card-blue">
+                    <div class="card-body"><h3 id="stat-kasa">₺0</h3><p>Toplam Tahsilat</p></div>
+                    <i class="fas fa-lira-sign"></i>
+                </div>
+                <div class="card card-red">
+                    <div class="card-body"><h3 id="stat-bekleyen">0</h3><p>Bekleyen Aidat</p></div>
+                    <i class="fas fa-hand-holding-usd"></i>
+                </div>
+            </div>
+            <div id="resident-welcome" class="resident-only welcome-box">
+                <h2>Merhaba, <span id="res-name"></span></h2>
+                <div id="my-debt-status"></div>
+            </div>
+        </section>
+
+        <section id="sakinler" class="content-section admin-only">
+            <div class="section-header">
+                <h2>Sakin Listesi</h2>
+                <button class="btn-primary" onclick="toggleModal('sakinModal')">+ Yeni Sakin</button>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Daire</th><th>Ad Soyad</th><th>Tel</th><th>İşlem</th></tr></thead>
+                    <tbody id="sakinTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="aidat" class="content-section">
+            <h2>Aidat Durumu</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Daire</th><th>Ad Soyad</th><th>Tutar</th><th>Durum</th><th class="admin-only">İşlem</th></tr></thead>
+                    <tbody id="aidatTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="ariza" class="content-section"><div class="section-header"><h2>Arıza Bildirimleri</h2><button class="btn-primary" onclick="toggleModal('arizaModal')">+ Bildir</button></div><div id="arizaList" class="grid-list"></div></section>
+        <section id="duyuru" class="content-section"><div class="section-header"><h2>Duyurular</h2><button class="btn-primary admin-only" onclick="toggleModal('duyuruModal')">+ Yayınla</button></div><div id="duyuruList" class="grid-list"></div></section>
+    </main>
+
+    <div id="sakinModal" class="modal"><div class="modal-content"><h3>Yeni Sakin</h3><input type="text" id="sakinDaire" placeholder="A-1"><input type="text" id="sakinAd" placeholder="Ad Soyad"><input type="text" id="sakinTel" placeholder="Tel"><div class="modal-buttons"><button onclick="saveSakin()" class="btn-primary">Kaydet</button><button onclick="toggleModal('sakinModal')" class="btn-secondary">Kapat</button></div></div></div>
+    <div id="arizaModal" class="modal"><div class="modal-content"><h3>Arıza Bildir</h3><input type="text" id="arizaBaslik" placeholder="Konu"><textarea id="arizaDetay" placeholder="Detay..."></textarea><div class="modal-buttons"><button onclick="saveAriza()" class="btn-primary">Gönder</button><button onclick="toggleModal('arizaModal')" class="btn-secondary">İptal</button></div></div></div>
+    <div id="duyuruModal" class="modal"><div class="modal-content"><h3>Duyuru Ekle</h3><input type="text" id="duyuruBaslik" placeholder="Başlık"><textarea id="duyuruMetin" placeholder="Metin..."></textarea><div class="modal-buttons"><button onclick="saveDuyuru()" class="btn-primary">Yayınla</button><button onclick="toggleModal('duyuruModal')" class="btn-secondary">Kapat</button></div></div></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
