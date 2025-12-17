@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YönetimPRO</title>
+    <title>YönetimPRO | 2025</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
@@ -12,17 +12,30 @@
 
     <div id="login-screen" class="login-overlay">
         <div class="login-card">
-            <div class="login-header"><h2>Yönetim<span>PRO</span></h2></div>
-            <input type="text" id="login-username" placeholder="Daire (A-1) veya admin">
-            <input type="password" id="login-password" placeholder="Şifre">
-            <button onclick="handleLogin()" id="login-btn" class="btn-login">Giriş Yap</button>
+            <div class="login-header">
+                <i class="fas fa-building-circle-check"></i>
+                <h2>Yönetim<span>PRO</span></h2>
+            </div>
+            <div class="login-body">
+                <div class="input-group">
+                    <label>Kullanıcı Adı / Daire No</label>
+                    <input type="text" id="login-username" placeholder="admin veya A-1">
+                </div>
+                <div class="input-group">
+                    <label>Şifre</label>
+                    <input type="password" id="login-password" placeholder="••••">
+                </div>
+                <button type="button" onclick="handleLogin()" id="login-btn" class="btn-login">Giriş Yap</button>
+            </div>
+            <p id="login-error-msg" style="color:red; display:none; margin-top:10px; font-size:13px;">Hatalı giriş!</p>
         </div>
     </div>
 
     <div id="app-wrapper" style="display:none;">
         <nav class="sidebar">
             <div class="sidebar-header"><h3>Yönetim<span>PRO</span></h3></div>
-            <ul class="nav-links" id="menu-list"></ul>
+            <ul class="nav-links" id="menu-list">
+                </ul>
         </nav>
 
         <main class="main-content">
@@ -30,14 +43,14 @@
                 <h2 id="current-page-title">Genel Bakış</h2>
                 <div class="user-info">
                     <span id="user-display-name">...</span>
-                    <button onclick="handleLogout()" class="btn-logout"><i class="fas fa-power-off"></i></button>
+                    <button type="button" onclick="handleLogout()" class="btn-logout"><i class="fas fa-power-off"></i></button>
                 </div>
             </header>
 
             <section id="dashboard" class="content-section active">
                 <div class="admin-only dashboard-cards">
-                    <div class="card"><div><h3 id="stat-kasa">₺0</h3><p>Kasa</p></div></div>
-                    <div class="card"><div><h3 id="stat-bekleyen">0</h3><p>Borçlu</p></div></div>
+                    <div class="card card-blue"><h3 id="stat-kasa">₺0</h3><p>Toplam Kasa</p></div>
+                    <div class="card card-red"><h3 id="stat-bekleyen">0</h3><p>Borçlu Sayısı</p></div>
                 </div>
                 <div class="resident-only welcome-box">
                     <h2>Hoş Geldiniz, <span id="res-name"></span></h2>
@@ -48,18 +61,18 @@
             <section id="sakinler" class="content-section">
                 <div class="section-header">
                     <h2>Sakin Listesi</h2>
-                    <button class="btn-primary admin-only" onclick="toggleModal('sakinModal')">+ Yeni Kayıt</button>
+                    <button type="button" class="btn-primary admin-only" onclick="toggleModal('sakinModal')">+ Yeni Sakin</button>
                 </div>
                 <table>
-                    <thead><tr><th>Daire</th><th>Ad</th><th>İletişim</th><th class="admin-only">İşlem</th></tr></thead>
+                    <thead><tr><th>Daire</th><th>Ad Soyad</th><th>Telefon</th><th class="admin-only">İşlem</th></tr></thead>
                     <tbody id="sakinTableBody"></tbody>
                 </table>
             </section>
 
             <section id="odemeler" class="content-section">
-                <div class="section-header"><h2>Ödemeler</h2></div>
+                <div class="section-header"><h2>Aidat Ödemeleri</h2></div>
                 <table>
-                    <thead><tr><th>Daire</th><th>Dönem</th><th>Durum</th><th class="admin-only">Onay</th></tr></thead>
+                    <thead><tr><th>Daire</th><th>Dönem</th><th>Tutar</th><th>Durum</th><th class="admin-only">Onay</th></tr></thead>
                     <tbody id="aidatTableBody"></tbody>
                 </table>
             </section>
@@ -67,45 +80,48 @@
             <section id="duyurular" class="content-section">
                 <div class="section-header">
                     <h2>Duyurular</h2>
-                    <button class="btn-primary admin-only" onclick="toggleModal('duyuruModal')">Yeni Duyuru</button>
+                    <button type="button" class="btn-primary admin-only" onclick="toggleModal('duyuruModal')">Ekle</button>
                 </div>
                 <div id="duyuruList" class="dashboard-cards"></div>
             </section>
 
             <section id="ariza" class="content-section">
-                <div class="section-header"><h2>Arıza Takibi</h2></div>
-                
+                <div class="section-header"><h2>Arıza Kayıtları</h2></div>
                 <div class="admin-only">
                     <table>
-                        <thead><tr><th>Daire</th><th>Konu</th><th>Detay</th></tr></thead>
+                        <thead><tr><th>Daire</th><th>Konu</th><th>Detay</th><th>Tarih</th></tr></thead>
                         <tbody id="arizaTableBody"></tbody>
                     </table>
                 </div>
-
-                <div class="resident-only card" style="flex-direction:column; align-items:flex-start; gap:10px;">
-                    <input type="text" id="ariza-baslik" placeholder="Arıza Başlığı (Örn: Lamba Bozuk)" style="width:100%; padding:10px;">
-                    <textarea id="ariza-detay" placeholder="Detay yazın..." style="width:100%; height:100px; padding:10px;"></textarea>
-                    <button class="btn-primary" onclick="saveAriza()">Yönetime Bildir</button>
+                <div class="resident-only card" style="flex-direction:column; align-items:flex-start;">
+                    <p>Arıza bildirim formu:</p>
+                    <input type="text" id="ariza-baslik" placeholder="Konu" style="width:100%; margin:10px 0;">
+                    <textarea id="ariza-detay" placeholder="Detaylar..." style="width:100%; height:80px;"></textarea>
+                    <button type="button" class="btn-primary" style="margin-top:10px;" onclick="saveAriza()">Bildirimi Gönder</button>
                 </div>
             </section>
         </main>
     </div>
 
     <div id="sakinModal" class="modal"><div class="modal-content">
-        <h3>Yeni Sakin</h3>
-        <input type="text" id="sakinDaire" placeholder="Daire No">
+        <h3>Yeni Sakin Kaydı</h3>
+        <input type="text" id="sakinDaire" placeholder="Daire (Örn: B-4)">
         <input type="text" id="sakinAd" placeholder="Ad Soyad">
         <input type="text" id="sakinTel" placeholder="Telefon">
-        <button onclick="saveSakin()" class="btn-primary">Kaydet</button>
-        <button onclick="toggleModal('sakinModal')" class="btn-secondary">İptal</button>
+        <div class="modal-buttons">
+            <button type="button" onclick="saveSakin()" class="btn-primary">Kaydet</button>
+            <button type="button" onclick="toggleModal('sakinModal')" class="btn-secondary">İptal</button>
+        </div>
     </div></div>
 
     <div id="duyuruModal" class="modal"><div class="modal-content">
-        <h3>Yeni Duyuru</h3>
+        <h3>Duyuru Yayınla</h3>
         <input type="text" id="duyuruBaslik" placeholder="Başlık">
-        <textarea id="duyuruMetin" placeholder="İçerik"></textarea>
-        <button onclick="saveDuyuru()" class="btn-primary">Yayınla</button>
-        <button onclick="toggleModal('duyuruModal')" class="btn-secondary">İptal</button>
+        <textarea id="duyuruMetin" placeholder="İçerik..."></textarea>
+        <div class="modal-buttons">
+            <button type="button" onclick="saveDuyuru()" class="btn-primary">Yayınla</button>
+            <button type="button" onclick="toggleModal('duyuruModal')" class="btn-secondary">İptal</button>
+        </div>
     </div></div>
 
     <script src="script.js"></script>
